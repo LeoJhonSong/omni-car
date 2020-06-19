@@ -1,5 +1,3 @@
-import time
-
 import gpiozero
 
 
@@ -37,7 +35,7 @@ class Motor(object):
         return self.motor.value
 
 
-class omniMotorsGroup(object):
+class OmniMotorsGroup(object):
     '''
     '''
 
@@ -49,19 +47,52 @@ class omniMotorsGroup(object):
         self.motors['RightFront'] = Motor(18, 23, 24, 25)
         self.motors['LeftRear'] = Motor(13, 26, 19, 6)
         self.motors['RightRear'] = Motor(16, 21, 20, 12)
+        self.maxVelocity = 0.3
 
-    def update(self, velocityDict=None, velocityList=None):
+    def update(self, velocityList):
         '''
         `velocityList`: set velocity of motors by list
 
             LeftFront, RightFront, LeftRear, RightRear
         '''
-        if velocityDict is not None:
-            for motor in velocityDict:
-                self.motors[motor].setVelocity(velocityDict[motor])
-        elif velocityList is not None:
-            self.motors['LeftFront'].setVelocity(velocityList[0])
-            self.motors['RightFront'].setVelocity(velocityList[1])
-            self.motors['LeftRear'].setVelocity(velocityList[2])
-            self.motors['RightRear'].setVelocity(velocityList[3])
+        self.motors['LeftFront'].setVelocity(velocityList[0])
+        self.motors['RightFront'].setVelocity(velocityList[1])
+        self.motors['LeftRear'].setVelocity(velocityList[2])
+        self.motors['RightRear'].setVelocity(velocityList[3])
 
+    def throttle(self, ratio):
+        '''
+        forward is positive
+
+            return a velocity list
+        '''
+        return [ratio] * 4
+
+    def shift(self, ratio):
+        '''
+        left shift is positive
+
+            return a velocity list
+        '''
+        return [-ratio, ratio, ratio, -ratio]
+
+    def spin(self, ratio):
+        '''
+        clock-wise spin is positive
+
+            return a velocity list
+        '''
+        return [ratio, -ratio, ratio, -ratio]
+
+    def move(self, state):
+        '''
+        merge the throttle, shift and spin, then set the motors velocity
+
+        `state`: [throttle, shift, spin]
+        '''
+        maxVelocity = sum([abs(item) for item in state])
+        if maxVelocity > self.maxVelocity:
+            state = [item / maxVelocity for item in state]
+        self.update(list(map(
+            lambda x: x[0] + x[1] + x[2], zip(self.throttle(state[0]), self.shift(state[1]), self.spin(state[2]))
+        )))

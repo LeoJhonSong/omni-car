@@ -9,13 +9,13 @@ import devices
 class Controller:
     def __init__(self):
         self.events = {
-            'w': self.forward,
-            's': self.backward,
-            'a': self.left_shift,
-            'd': self.right_shift,
-            'j': self.turn_left,
-            'l': self.turn_right,
-            ' ': self.stop,
+            ord('w'): self.forward,
+            ord('s'): self.backward,
+            ord('a'): self.left_shift,
+            ord('d'): self.right_shift,
+            ord('j'): self.turn_left,
+            ord('l'): self.turn_right,
+            ord(' '): self.stop,
         }
         self.state = [0, 0, 0]
         self.car = devices.OmniMotorsGroup()
@@ -56,8 +56,8 @@ def ui(screen):
             key = event.key_code
             if key == ord('q'):
                 break
-            if chr(key) in ctl.events:
-                ctl.events[chr(key)]()
+            if key in ctl.events:
+                ctl.events[key]()
         # refresh the screen
         screen.clear()
         screen.print_at(str(ctl.update()), 0, 0)

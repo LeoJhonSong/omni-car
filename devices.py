@@ -1,3 +1,4 @@
+import time
 import gpiozero
 
 
@@ -32,7 +33,15 @@ class Motor(object):
         return a float between -1 and 1\n
         later will be value from the encoder
         '''
-        return self.motor.value
+        start = time.time()
+        last = self.encoderPin.value
+        count = 0
+        while time.time() - start < 0.01:
+            new = self.encoderPin.value
+            if new != last:
+                count += 1
+                last = new
+        return count
 
 
 class OmniMotorsGroup(object):
@@ -82,7 +91,7 @@ class OmniMotorsGroup(object):
 
             return a velocity list
         '''
-        return [ratio, -ratio, ratio, -ratio]
+        return [-ratio, ratio, -ratio, ratio]
 
     def move(self, state):
         '''
@@ -96,3 +105,4 @@ class OmniMotorsGroup(object):
         self.update(list(map(
             lambda x: x[0] + x[1] + x[2], zip(self.throttle(state[0]), self.shift(state[1]), self.spin(state[2]))
         )))
+
